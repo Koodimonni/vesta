@@ -21,7 +21,7 @@ port=$5
 restart=$6
 
 #TODO: make more templates and add ability to change them
-template="application_proxy_both"
+template="listen-http-https"
 
 # Includes
 source $VESTA/func/main.sh
