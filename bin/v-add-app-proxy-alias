@@ -1,0 +1,99 @@
+#!/bin/bash
+# info: add web domain alias
+# options: USER APP ALIAS [RESTART]
+#
+# The call is intended for adding aliases to a application proxf (it is also called
+# "domain parking"). The function supports wildcards *.domain.tpl.
+
+
+#----------------------------------------------------------#
+#                    Variable&Function                     #
+#----------------------------------------------------------#
+
+# Argument defenition
+user=$1
+domain=$(idn -t --quiet -u "$2" )
+domain=$(echo $domain | tr '[:upper:]' '[:lower:]')
+domain_idn=$(idn -t --quiet -a "$domain")
+dom_alias=$(idn -t --quiet -u "$3" )
+dom_alias=$(echo $dom_alias | sed -e 's/\.*$//g' -e 's/^\.*//g')
+dom_alias=$(echo $dom_alias | tr '[:upper:]' '[:lower:]')
+dom_alias_idn=$(idn -t --quiet -a "$dom_alias" )
+restart="$4"
+
+# Includes
+source $VESTA/func/main.sh
+source $VESTA/func/domain.sh
+source $VESTA/func/ip.sh
+source $VESTA/func/app.sh
+source $VESTA/conf/vesta.conf
+
+
+#----------------------------------------------------------#
+#                    Verifications                         #
+#----------------------------------------------------------#
+
+check_args '3' "$#" 'USER APP DOM_ALIAS [RESTART]'
+validate_format 'user' 'domain' 'dom_alias'
+is_system_enabled "$WEB_SYSTEM" 'WEB_SYSTEM'
+is_object_valid 'user' 'USER' "$user"
+is_object_unsuspended 'user' 'USER' "$user"
+is_object_valid 'app' 'DOMAIN' "$domain"
+is_object_unsuspended 'app' 'DOMAIN' "$domain"
+
+
+#----------------------------------------------------------#
+#                       Action                             #
+#----------------------------------------------------------#
+# Parsing domain values
+get_domain_values 'app'
+tpl_file="$WEBTPL/$PROXY_SYSTEM/app/$TPL.tpl"
+conf="$HOMEDIR/$user/conf/web/app/$domain.conf"
+ip=$(get_real_ip $IP)
+
+# Parsing domain aliases but don't add same alias more than once
+if [ -z "$ALIAS" ]; then
+    ALIAS="$dom_alias"
+else
+    if [[ $ALIAS != *$dom_alias* ]]; then
+        ALIAS="$ALIAS,$dom_alias"
+    else
+        #If this alias exists
+        exit
+    fi
+fi
+
+# Preparing domain values for the template substitution
+# Mostly useless for proxy but updates aliases_idn and sets ssl paths
+upd_web_domain_values
+
+#Use default ssl if not exists
+if [ ! -f $ssl_crt ]; then
+    ssl_crt="$VESTA/ssl/certificate.crt"
+    ssl_key="$VESTA/ssl/certificate.key"
+fi
+
+add_proxy_config
+
+#----------------------------------------------------------#
+#                       Vesta                              #
+#----------------------------------------------------------#
+
+# Adding new alias
+update_object_value 'app' 'DOMAIN' "$domain" '$ALIAS' "$ALIAS"
+
+# Update counters
+increase_user_value "$user" '$U_APP_PROXY_ALIASES'
+
+# Adding task to the vesta pipe
+if [ "$restart" != 'no' ]; then
+    $BIN/v-restart-proxy
+    if [ $? -ne 0 ]; then
+        exit $E_RESTART
+    fi
+fi
+
+log_history "added $dom_alias as alias for application proxy $domain"
+log_event "$OK" "$EVENT"
+
+exit

@@ -1,0 +1,105 @@
+#!/bin/bash
+# info: delete web domain
+# options: USER DOMAIN
+#
+# The call of function leads to the removal of domain and all its components
+# (statistics, folders contents, ssl certificates, etc.). This operation is
+# not fully supported by "undo" function, so the data recovery is possible
+# only with a help of reserve copy.
+
+
+#----------------------------------------------------------#
+#                    Variable&Function                     #
+#----------------------------------------------------------#
+
+# Argument defenition
+user=$1
+domain=$(idn -t --quiet -u "$2" )
+domain_idn=$(idn -t --quiet -a "$domain")
+restart=$3
+
+# Includes
+source $VESTA/func/main.sh
+source $VESTA/func/domain.sh
+source $VESTA/func/ip.sh
+source $VESTA/conf/vesta.conf
+
+
+#----------------------------------------------------------#
+#                    Verifications                         #
+#----------------------------------------------------------#
+
+check_args '2' "$#" 'USER DOMAIN'
+validate_format 'user' 'domain'
+is_system_enabled "$WEB_SYSTEM" 'WEB_SYSTEM'
+is_object_valid 'user' 'USER' "$user"
+is_object_unsuspended 'user' 'USER' "$user"
+is_object_valid 'app' 'DOMAIN' "$domain"
+is_object_unsuspended 'app' 'DOMAIN' "$domain"
+
+
+#----------------------------------------------------------#
+#                       Action                             #
+#----------------------------------------------------------#
+
+# Get template name
+get_domain_values 'app'
+tpl_file="$WEBTPL/$PROXY_SYSTEM/app/$TPL.tpl"
+conf="$HOMEDIR/$user/conf/web/app/$domain.conf"
+ip=$(get_real_ip $IP)
+
+# Checking aliases
+if [ ! -z "$ALIAS" ]; then
+    aliases=$(echo $ALIAS | tr ',' '\n' | wc -l )
+else
+    aliases=0
+fi
+
+# Checking SSL
+if [ "$SSL" = 'yes' ]; then
+    # Deleting SSL certificates
+    rm -f $HOMEDIR/$user/conf/web/ssl.$domain.*
+    rm -f $USER_DATA/ssl/$domain.*
+fi
+
+# Checking stats
+if [ ! -z "$STATS" ] && [ "$STATS" != 'no' ]; then
+    sed -i "/ $domain$/d" $VESTA/data/queue/webstats.pipe
+    rm -f $HOMEDIR/$user/conf/web/$STATS.$domain.conf
+    rm -f /etc/awstats/$STATS.$domain.conf
+fi
+
+# Deleting nginx config
+rm -rf $conf
+
+#----------------------------------------------------------#
+#                       Vesta                              #
+#----------------------------------------------------------#
+
+# Deleting domain
+sed -i "/DOMAIN='$domain'/ d" $USER_DATA/app.conf
+
+# Checking last domain
+domains=$(wc -l $USER_DATA/app.conf | cut -f1 -d ' ')
+if [ "$domains" -eq '0' ]; then
+    sed -i "/.*\/$user\/.*/d" "/etc/$PROXY_SYSTEM/conf.d/app-proxys.conf"
+fi
+
+# Decrease counters
+decrease_ip_value "$ip"
+decrease_user_value "$user" '$U_APP_PROXYS'
+decrease_user_value "$user" '$U_APP_PROXY_ALIASES' "$aliases"
+
+# Restart web server
+if [ "$restart" != 'no' ]; then
+    $BIN/v-restart-proxy
+    if [ $? -ne 0 ]; then
+        exit $E_RESTART
+    fi
+fi
+
+# Logging
+log_history "deleted application proxy $domain"
+log_event "$OK" "$EVENT"
+
+exit

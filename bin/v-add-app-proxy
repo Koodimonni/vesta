@@ -1,0 +1,145 @@
+#!/bin/bash
+# info: add app proxy
+# options: USER DOMAIN HOST-IP TARGET-IP TARGET-PORT [RESTART]
+#
+# The function adds virtual host to a server which serves as a application proxy.
+# So it's just a proxypass for nginx.
+
+#----------------------------------------------------------#
+#                    Variable&Function                     #
+#----------------------------------------------------------#  
+
+# Argument defenition
+user=$1
+domain=$(idn -t --quiet -u "$2" )
+domain=$(echo $domain | sed -e 's/\.*$//g' -e 's/^\.*//g')
+domain=$(echo $domain | tr '[:upper:]' '[:lower:]')
+domain_idn=$(idn -t --quiet -a "$domain")
+ip=$3
+proxy=$4
+port=$5
+restart=$6
+
+#TODO: make more templates and add ability to change them
+template="application_proxy_both"
+
+# Includes
+source $VESTA/func/main.sh
+source $VESTA/func/domain.sh
+source $VESTA/func/ip.sh
+source $VESTA/func/app.sh 
+source $VESTA/conf/vesta.conf
+
+#----------------------------------------------------------#
+#                    Verifications                         #
+#----------------------------------------------------------#
+
+check_args '5' "$#" 'USER DOMAIN HOST-IP TARGET-IP TARGET-PORT [RESTART]'
+validate_format 'user' 'domain' 'ip' 'proxy' 'port'
+is_system_enabled "$PROXY_SYSTEM" 'PROXY_SYSTEM'
+is_object_valid 'user' 'USER' "$user"
+is_object_unsuspended 'user' 'USER' "$user"
+is_ip_valid
+is_ip_avalable
+
+is_domain_new 'app'
+is_top_level_domain_owned_by_somebody_else
+
+#Add some template validation
+
+#----------------------------------------------------------#
+#                       Action                             #
+#----------------------------------------------------------#
+
+#Just to make clear what this is
+TARGET_IP=$proxy
+TARGET_PORT=$port
+
+# Define real ip in case of NAT
+IP=$ip
+ip=$(get_real_ip $ip)
+
+# Defining domain aliases
+ip_name=$(get_ip_name)
+ip_name_idn=$(idn -t --quiet -a "$ip_name")
+domain_alias="www.$domain"
+domain_alias_idn="www.$domain_idn"
+if [ ! -z "$ip_name" ]; then
+    domain_alias_dash="${domain//./-}.$ip_name"
+    domain_alias_dash_idn="${domain_idn//./-}.$ip_name_idn"
+    aliases="$domain_alias,$domain_alias_dash"
+    aliases_idn="$domain_alias_idn,$domain_alias_dash_idn"
+    alias_string="ServerAlias $domain_alias_idn $domain_alias_dash_idn"
+else
+    aliases="$domain_alias"
+    aliases_idn="$domain_alias_idn"
+    alias_string="ServerAlias $domain_alias_idn"
+fi
+
+# Create proxy dir
+conf_dir="$HOMEDIR/$user/conf/web/app"
+if [ ! -d $conf_dir ]; then
+  mkdir -p $conf_dir
+fi
+
+#Sed config values
+tpl_file="$WEBTPL/$PROXY_SYSTEM/app/$template.tpl"
+conf="$conf_dir/$domain.conf"
+#Default ssl configs
+ssl_crt="$VESTA/ssl/certificate.crt"
+ssl_key="$VESTA/ssl/certificate.key"
+add_proxy_config
+
+# Checking that user is in application proxy configs
+global_proxy_conf="/etc/$PROXY_SYSTEM/conf.d/app-proxys.conf"
+if [ ! -f $global_proxy_conf ]; then
+  touch $global_proxy_conf
+fi
+
+conf_include_directive="$conf_dir/*.conf"
+if [[ !$(grep -q $user $global_proxy_conf) ]]; then
+  echo "include $conf_include_directive;" >> $global_proxy_conf
+fi
+
+#----------------------------------------------------------#
+#                       Vesta                              #
+#----------------------------------------------------------#
+
+
+#Test if this ruined nginx config files.
+#Make a dry run with nginx, this can lead to problem if something else breaks things
+if [[ $(nginx -t) ]]; then
+    echo "this leads to invalid nginx config file!"
+    rm $conf
+    exit $E_INVALID
+fi
+
+# Increasing counters
+increase_user_value "$user" '$U_APP_PROXYS'
+
+# Defining domain variables
+str="DOMAIN='$domain' IP='$IP' IP6='' TARGET_IP='$TARGET_IP' TARGET_PORT='$TARGET_PORT' ALIAS='$aliases' TPL='$template'"
+str="$str SSL='no' SSL_HOME='same'"
+str="$str PORT='$port' STATS='' STATS_USER=''"
+str="$str U_BANDWIDTH='0' SUSPENDED='no'"
+str="$str TIME='$TIME' DATE='$DATE'"
+
+# Registering application
+echo "$str" >> $USER_DATA/app.conf
+chmod 660 $USER_DATA/app.conf
+
+
+
+# Restart proxy server
+if [ "$restart" != 'no' ]; then
+    $BIN/v-restart-proxy
+    if [ $? -ne 0 ]; then
+        exit $E_RESTART
+    fi
+fi
+
+# Logging
+log_history "added application proxy for $domain"
+log_event "$OK" "$EVENT"
+
+exit

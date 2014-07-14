@@ -4,6 +4,9 @@
                         <div class="submenu-button-block">
                             <button class="submenu-button-main" onclick="location.href='/add/web/'"> <?php print __('Add Web Domain');?> </button>
                         </div>
+                        <div class="submenu-button-block">
+                            <button class="submenu-button-secondary" onclick="location.href='/add/app/'"> <?php print __('Add App Proxy');?> </button>
+                        </div>
                         <div class="submenu-search-block">
                             <form action="/search/" method="get">
                             <input type="text" name="q" class="submenu-search-field">
@@ -209,13 +212,158 @@
             </table>
             </form>
 
-            <div class="data-count">
+            <table class="data-count">
+                <tr>
+                    <td width="174px">
+                    <td>
+                        <?php
+                            if ( $i == 1) {
+                                echo __('1 domain');
+                            } else {
+                                echo __('%s domains',$i);
+                            }
+                        ?> 
+                    </td>
+                </tr>
+            </table>
+
+
+
+
+
+
+
+
+            <?php if (isset($applications)) echo '<h3 class="submenu-header">Application proxys<h3>' ?>
+            <table class="applications-data">
+                <table class='data'>
                 <?php
-                    if ( $i == 1) {
-                        echo __('1 domain');
-                    } else {
-                        echo __('%s domains',$i);
+                    foreach ($applications as $key => $value) {
+                        ++$i;
+                        if ($applications[$key]['SUSPENDED'] == 'yes') {
+                            $status = 'suspended';
+                            $spnd_action = 'unsuspend' ;
+                            $spnd_confirmation = 'UNSUSPEND_DOMAIN_CONFIRMATION' ;
+                        } else {
+                            $status = 'active';
+                            $spnd_action = 'suspend' ;
+                            $spnd_confirmation = 'SUSPEND_DOMAIN_CONFIRMATION' ;
+                        }
+                        $web_stats='no';
+                        if (!empty($applications[$key]['STATS'])) {
+                            $web_stats=$applications[$key]['STATS'];
+                        }
+                    ?> 
+                <tr class="data-row">
+                    <td class="data-dotted">
+                        <table class="data-col1">
+                            <tr><td><input type="checkbox" class="ch-toggle" name="domain[]" value="<?php echo $key ?>" ></td></tr>
+                            <tr><td><a class="data-date" title="<?php echo  $applications[$key]['DATE']."  ".$applications[$key]['TIME'] ?>"><?php echo strftime("%d %b %Y", strtotime($applications[$key]['DATE'])) ?></a></td></tr>
+                            <tr><td class="data-<?php echo $status ?>"><b><?php echo __($status) ?></b></td></tr>
+                        </table>
+                    </td>
+                    <td class="data-dotted">
+                        <a id="delete_link_<?php echo $i ?>" class="data-controls do_delete">
+                            <span class="do_delete">
+                                <img src="/images/delete.png" width="7px" height="7px">
+                                 <?php print __('delete');?> 
+                                <input type="hidden" name="delete_url" value="/delete/app/?domain=<?php echo $key ?>" />
+                                <div id="delete_dialog_<?php echo $i ?>" class="confirmation-text-delete hidden" title="<?php print __('Confirmation');?>">
+                                    <p class="counter-value"><?php print __('DELETE_DOMAIN_CONFIRMATION',$key);?></p>
+                                </div>
+                            </span>
+                        </a>
+                        <a id="<?php echo $spnd_action ?>_link_<?php echo $i ?>" class="data-controls do_<?php echo $spnd_action ?>">
+                            <span class="do_<?php echo $spnd_action ?>">
+                                <img src="/images/suspend.png" width="7px" height="8px">
+                                <?php echo __($spnd_action); ?> 
+                                <input type="hidden" name="<?php echo $spnd_action ?>_url" value="/<?php echo $spnd_action ?>/app/?domain=<?php echo $key ?>" />
+                                <div id="<?php echo $spnd_action ?>_dialog_<?php echo $i ?>" class="confirmation-text-suspention hidden" title="<?php print __('Confirmation');?>">
+                                    <p class="counter-value"><?php print __($spnd_confirmation,$key);?></p>
+                                </div>
+                            </span>
+                        </a>
+                        <a href="/edit/app/?domain=<?php echo $key ?>" class="data-controls">
+                            <span>
+                                <img src="/images/edit.png" width="8px" height="8px">
+                                <?php print __('edit');?> 
+                            </span>
+                        </a>
+
+                        <?php
+                            if (!empty($applications[$key]['STATS'])) {
+                        ?> 
+                        <a href="http://<?php echo $key ?>/vstats/"  target="_blank" class="data-controls">
+                            <span>
+                                <img src="/images/new_window.png" width="8px" height="8px">
+                                <?php print __('open webstats');?> 
+                            </span>
+                        </a>
+                        <?php
+                                }
+                         ?> 
+                        <table class="data-col2">
+                            <tr>
+                                <td colspan=3 class="domain">
+                                    <b><?php echo $key ?></b> <a class="aliases"><?php echo str_replace(',', ', ', $applications[$key]['ALIAS']) ?></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align:top;" width="239px">
+                                    <table>
+                                        <tr>
+                                            <td class="counter-name">
+                                                <?php echo $applications[$key]['IP']."------>".$applications[$key]['TARGET_IP'].":".$applications[$key]['TARGET_PORT'] ?> 
+                                            </td>
+                                        <tr>
+                                        <tr>
+                                            <td class="chart1" style="padding: 8px 0 0 0">
+                                                <?php print __('Bandwidth');?>: <?php echo humanize_usage($applications[$key]['U_BANDWIDTH']) ?> 
+                                                <div style="width:160px; height:6px; font-size:0;background-color:#c7d5b3;">
+                                                    <div style="width:<?php echo get_percentage($applications[$key]['U_BANDWIDTH'],$panel[$user]['BANDWIDTH']) ?>%; height:6px; background-color:#9bbb62; border-right:1px #9bbb62 solid;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="vertical-align:top;" width="297px">
+                                    <table>
+                                        <tr>
+                                            <td class="counter-name"><?php print __('Proxy Template');?>:</td>
+                                            <td class="counter-value"><?php print __($applications[$key]['TPL']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="counter-name"><?php print __('SSL Support');?>:</td>
+                                            <td class="counter-value"><?php print __($applications[$key]['SSL']) ?></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="counter-name"><?php print __('Web Statistics');?>: </td>
+                                            <td class="counter-value"> <?php print __($web_stats) ?></td>
+                                        </tr>
+
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <?php
                     }
                 ?> 
-            </div>
+            </table>
+
+            <table class="data-count">
+                <tr>
+                    <td width="174px">
+                    <td>
+                        <?php
+                            if ( count($applications) == 1) {
+                                echo __('1 applications');
+                            } else {
+                                echo __('%s applications',count($applications));
+                            }
+                        ?> 
+                    </td>
+                </tr>
+            </table>
         </div>

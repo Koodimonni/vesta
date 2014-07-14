@@ -1,0 +1,218 @@
+            <?php
+                $back = $_SESSION['back'];
+                    if (empty($back)) {
+                    $back = "location.href='/list/web/'";
+                } else {
+                    $back = "location.href='".$back."'";
+                }
+            ?> 
+            <table class="submenu">
+                <tr>
+                    <td style="padding: 20px 10px;" ><a class="name"><b><?php print __('Adding Application Proxy');?></b></a>
+                        <?php
+                            if (!empty($_SESSION['error_msg'])) {
+                                echo "<span class=\"vst-error\"> → ".$_SESSION['error_msg']."</span>";
+                            } else {
+                                if (!empty($_SESSION['ok_msg'])) {
+                                    echo "<span class=\"vst-ok\"> → ".$_SESSION['ok_msg']."</span>";
+                                }
+                            }
+                        ?> 
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <form id="vstobjects" name="v_add_web" method="post">
+            <script type="text/javascript">
+                $(function() {
+                    $("#v_domain").change(function() {
+                        var prefix = 'www.';
+                        document.getElementById('v_aliases').value = prefix + document.getElementById('v_domain').value;
+                    });
+                });
+                function WEBrandom() {
+                    var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+                    var string_length = 10;
+                    var webrandom = '';
+                    for (var i=0; i<string_length; i++) {
+                        var rnum = Math.floor(Math.random() * chars.length);
+                        webrandom += chars.substring(rnum,rnum+1);
+                    }
+                    document.v_add_web.v_stats_password.value = webrandom;
+                }
+
+                function elementHideShow(elementToHideOrShow){
+                    var el = document.getElementById(elementToHideOrShow);
+                    if (el.style.display == "block") {
+                        el.style.display = "none";
+                    } else {
+                        el.style.display = "block";
+                    }
+                }
+            </script>
+
+            <table class='data'>
+                <tr class="data-add">
+                <td class="data-dotted">
+                    <table class="data-col1">
+                        <tr>
+                            <td></td>
+                        </tr>
+                    </table>
+                </td>
+                <td class="data-dotted">
+                    <table class="data-col2">
+                        <tr>
+                            <td class="vst-text" style="padding: 24px 0 0 0;">
+                                <?php print __('Domain');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" size="20" class="vst-input" name="v_domain" id="v_domain" <?php if (!empty($v_domain)) echo "value=".$v_domain;  ?>>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('IP address');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <select class="vst-list" name="v_ip">
+                                    <?php
+                                        foreach ($ips as $key => $value) {
+                                            $display_ip = $key;
+                                            if (!empty($value['NAT'])) $display_ip = $value['NAT'];
+                                            echo "\t\t\t\t<option value=\"".$display_ip."\"";
+                                            if ((!empty($v_ip)) && ( $display_ip == $_POST['v_ip'])){
+                                                echo ' selected';
+                                            }
+                                            echo ">".$display_ip."</option>\n";
+                                        }
+                                    ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('Target IP address');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" size="20" class="vst-input" name="v_target_ip" id="v_target_ip" <?php if (!empty($v_target_ip)) echo "value=".$v_target_ip;  ?>>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('Target port');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="number" class="vst-input" name="v_target_port" min="1" max="65535" id="v_target_port" <?php if (!empty($v_target_port)) echo "value=".$v_target_port;  ?>>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('DNS Support');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" size="20" class="vst-checkbox" name="v_dns" <?php if (empty($v_dns)) echo "checked=yes"; ?>>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('Mail Support');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" size="20" class="vst-checkbox" name="v_mail" <?php if (empty($v_mail)) echo "checked=yes"; ?>>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <a href="javascript:elementHideShow('advtable');" class="vst-advanced"><?php print __('Advanced options');?></a>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="data-col2" width="600px" style="display:<?php if (empty($v_adv)) echo 'none';?> ;" id="advtable">
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('Aliases');?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <textarea size="20" class="vst-textinput" name="v_aliases" id="v_aliases" ><?php if (!empty($v_aliases)) echo $v_aliases;  ?></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="vst-text" style="padding: 12px 0 0 0;">
+                                <?php print __('SSL Support');?> /
+                                <a class="generate" target="_blank" href="/generate/ssl/"><?php print __('Generate CSR') ?></a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" size="20" class="vst-checkbox" name="v_ssl" <?php if ($v_ssl == 'yes') echo "checked=yes" ?> onclick="javascript:elementHideShow('ssltable');">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table style="display:<?php if (empty($v_ssl)) { echo 'none';} else {echo 'block';}?>;" id="ssltable">
+                                    <tr>
+                                        <td class="vst-text" style="padding: 12px 0 0 0;">
+                                            <?php print __('SSL Certificate');?>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <textarea size="20" class="vst-textinput" name="v_ssl_crt"><?php if (!empty($v_ssl_crt)) echo $v_ssl_crt; ?></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="vst-text" style="padding: 12px 0 0 0;">
+                                            <?php print __('SSL Key');?>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <textarea size="20" class="vst-textinput" name="v_ssl_key"><?php if (!empty($v_ssl_key)) echo $v_ssl_key; ?></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="vst-text" style="padding: 12px 0 0 0;">
+                                            <?php print __('SSL Certificate Authority / Intermediate');?> <span class="optional">(<?php print __('optional');?>)</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <textarea size="20" class="vst-textinput" name="v_ssl_ca"><?php if (!empty($v_ssl_ca)) echo $v_ssl_ca; ?></textarea>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="data-col2">
+                        <tr>
+                            <td style="padding: 33px 0 0 0;" width="116px">
+                                <input type="submit" name="ok" value="<?php print __('Add');?>" class="button">
+                            </td>
+                            <td style="padding: 33px 0 0 0;">
+                                <input type="button" class="button" value="<?php print __('Back');?>" onclick="<?php echo $back ?>">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <script type="text/javascript" src="/js/pages/add.web.js"></script>
