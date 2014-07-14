@@ -61,7 +61,6 @@ $v_ftp_email = $panel[$user]['CONTACT'];
 
         if (empty($_SESSION['error_msg'])) {
             // Add WEB
-            echo "Running command: v-add-app-proxy v-add-app-proxy {$user} {$v_domain} {$v_ip} {$v_target_ip} {$v_target_port} 'no'";
             exec (VESTA_CMD."v-add-app-proxy {$user} {$v_domain} {$v_ip} {$v_target_ip} {$v_target_port} 'no'", $output, $return_var);
             check_return_code($return_var,$output);
             echo "<br>Return value: {$return_var}";
@@ -207,12 +206,7 @@ $v_ftp_email = $panel[$user]['CONTACT'];
     include($_SERVER['DOCUMENT_ROOT'].'/templates/admin/add_app.html');
     unset($_SESSION['error_msg']);
     unset($_SESSION['ok_msg']);
-//}
-
-var_dump( $_POST);
-foreach ($_POST as $key => $value) {
-    echo "<br>key:".$key."  value:".$value;
-}
+//
 
 // Footer
 include($_SERVER['DOCUMENT_ROOT'].'/templates/footer.html');
