@@ -1,6 +1,6 @@
 body {
     font-family: Arial, Helvetica, sans-serif;
-    background-color: #e1e8e8;
+    background-color: #e5e5e5;
     margin: 0;
     padding: 0;
     border: 0;
@@ -27,7 +27,7 @@ td {
 .top {
     width: 1000px;
     position: fixed; background: #fff;
-    border-bottom: 1px solid #e1e8e8;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .top-menu {
@@ -52,7 +52,7 @@ td {
 }
 
 .top-link:active{
-    color: #333;
+    color: #2361a1;
     background-color: #f1f1f1;
 }
 
@@ -65,7 +65,7 @@ td {
     line-height: 22px;
     padding: 0 20px 2px;
     color: #333;
-    background-color: #f0f0f0;
+    background-color: #f1f1f1;
 }
 
 .top-selected-link:hover {
@@ -125,7 +125,7 @@ td {
     height: 111px;
     width: 167px;
     margin: 0;
-    border-bottom: 1px solid #e1e8e8;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .nav-lnk {
@@ -145,7 +145,7 @@ td {
     width: 119px;
     float:left;
     cursor: pointer;
-    border-bottom: 1px solid #e1e8e8;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .nav-block:hover {
@@ -195,7 +195,6 @@ td {
     height: 58px;
     line-height: 1.4em;
     font-size: 9pt;
-    font-family: Arial, Helvetica, sans-serif;
     color: #333;
     decoration: none;
 }
@@ -212,6 +211,21 @@ td {
 }
 
 .submenu-button-main {
+    width: 130px;
+    height: 28px;
+    cursor: pointer;
+    color: #fafafa;
+    background-color: #f79b44;
+    border: 1px solid #f79b44;
+    border-radius: 3px 3px 3px 3px;
+    padding: 0;
+    font-size: 9pt;
+    font-weight: bold;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.submenu-button-secondary {
+    margin-left: 10px;
     width: 130px;
     height: 28px;
     cursor: pointer;
@@ -253,6 +267,12 @@ td {
     font-family:Arial, Helvetica, sans-serif;
 }
 
+.submenu-header {
+    border-top: 1px dotted #d3d3d3;
+    padding: 20px 10px 0;
+    color: #222;
+}
+
 
 @-moz-document url-prefix() {
     .submenu-button-main {
@@ -273,6 +293,11 @@ td {
 }
 
 .submenu-button-main:hover {
+    border: 1px solid #999;
+    background-color: #999;
+}
+
+.submenu-button-secondary:hover {
     border: 1px solid #999;
     background-color: #999;
 }
@@ -319,13 +344,13 @@ td {
 }
 
 .submenu-select-link:hover {
-    color: #fff;
-    background-color: #f79b44;
+    text-decoration: underline;
 }
 
 .submenu-select-link:active {
     color: #fff;
-    background-color: #777;
+    background-color: #f79b44;
+    text-decoration: underline;
 }
 
 .submenu-select-dropdown {
@@ -459,7 +484,7 @@ td {
 
 .data-row:hover {
     margin: 0;
-    background-color: #f0f0f0;
+    background-color: #f7f6ed;
 }
 
 .data-row:active {
@@ -572,9 +597,11 @@ td {
 
 .data-count {
     font-family: Arial, Helvetica, sans-serif;
-    color: #505050;
+    background-color: #f3f3f3;
+    color: #555;
     font-size: 8pt;
-    padding: 20px 0 20px 174px;
+    margin: 18px 0 0 0;
+    padding: 0 16px 0 0;
 }
 
 .chart1 {
@@ -632,7 +659,7 @@ td {
 .counter-name {
     white-space: nowrap;
     vertical-align:top;
-    line-height: 1.2em;
+    line-height: 1.3em;
     font-size: 10pt;
     color: #222;
     padding: 2px 4px 1px 0;
@@ -648,7 +675,7 @@ td {
 
 .counter-value {
     vertical-align:top;
-    line-height: 1.2em;
+    line-height: 1.3em;
     font-size: 10pt;
     color: #222;
     padding: 2px 0 1px 2px;
@@ -837,12 +864,12 @@ td {
 }
 
 .generate:hover {
-    background-color: #f79b44;
-    color: #fff;
+    color: #7fa1cb;
 }
 
 .generate:active {
-    background-color: #999;
+    background-color: #f79b44;
+    color: #fff;
 }
 
 .vst-advanced {
@@ -855,13 +882,12 @@ td {
 }
 
 .vst-advanced:hover {
-    color: #fff;
-    background-color: #f79b44;
+    color: #7fa1cb;
 }
 
 .vst-advanced:active {
     color: #fff;
-    background-color: #777;
+    background-color: #f79b44;
 }
 
 .fixed{
@@ -903,18 +929,19 @@ td {
 }
 
 .login-bottom {
+    color: #ebe9dc;
     text-align: right;
     vertical-align:top;
-    width: 474px;
+    width: 500px;
     height: 50px;
     margin: 0;
-    padding: 0 26px 0 0;
 }
 
 .vestacp{
     font-size: 8pt;
-    color: #505050;
+    color: #222;
     text-align: right;
+    padding: 0 8px 0 0;
 }
 
 .error {
